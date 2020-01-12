@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 error_reporting(0);
@@ -97,24 +96,12 @@ else{
             <!-- main blog area start-->
             <div class="single-blog-area ptb100 fix">
                <div class="container">
-                   <div class="row">
+               <div class="row">
+                        <div class="col-xs-12">
+                            <h1 class="section-title">Latest News</h1>
+                        </div>
                        <div class="col-md-12 col-sm-7">
                            <div class="single-blog-body">
-
-
-                        
-                                <div class="Leave-your-thought mt50">
-                                    <h3 class="aside-title uppercase">Latest News</h3>
-                                    <div class="row">
-                                        <form name="signin" method="post">
-                                            <div class="col-md-12 col-sm-6 col-xs-12 lyt-left">
-<table border="2" class="table">
-<tr>
-<th>#</th>  
-<th>New Title</th>  
-<th>News Description</th>  
-<th>Posting Date</th>  
-</tr>
 <?php
 
 $sql = "SELECT NewsTitle,NewsDetails,PostingDate from tblnews order by id desc ";
@@ -122,31 +109,31 @@ $query = $dbh -> prepare($sql);
 $query->bindParam(':isactive',$isactive,PDO::PARAM_STR);
 $query->execute();
 $results=$query->fetchAll(PDO::FETCH_OBJ);
-$cnt=1;
+
 if($query->rowCount() > 0)
 {
 foreach($results as $row)
 { ?>
-<tr>
-<td><?php echo htmlentities($cnt);?></td>  
-<td><?php echo htmlentities($row->NewsTitle);?></td> 
-<td><?php echo htmlentities($row->NewsDetails);?></td> 
-<td><?php echo htmlentities($row->PostingDate);?></td> 
-</tr>
-<?php $cnt++;
-}}?>
-</table>
+                                <div class="Leave-your-thought mt50">
+                                    <h3 class="aside-title uppercase"><?php echo htmlentities($row->NewsTitle);?></h3>
+                                    <small>Posting date : <?php echo htmlentities($row->PostingDate);?></small>
+                                    <hr>
+                                    <div class="row">
+                                        <form name="signin" method="post">
+                                            <div class="col-md-12 col-sm-6 col-xs-12 lyt-left">
+                                                <p>
+                                                    <?php echo htmlentities($row->NewsDetails);?>
+                                                </p>
                                             </div>
-
-
-</div>
-
                                         </form>
                                     </div>
                                 </div>
-                           </div>
-                       </div>
-               
+                                <?php 
+}}?>
+
+                            </div>
+                        </div>
+                    </div>
                </div>
            </div>
          </div>
