@@ -4,6 +4,7 @@
                                   <h3 class="aside-title uppercase">My Account</h3>
                                    <ul>
                                        <li><a href="profile.php">My Profile</a></li>
+                                       <li><a href="add-event.php">Add Event</a></li>
                                        <li><a href="change-password.php">Change Password</a></li>
                                        <li><a href="my-bookings.php">My Booking</a></li>
                                        <li><a href="logout.php">Logout</a></li>

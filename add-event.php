@@ -1,16 +1,10 @@
 <?php
 session_start();
-//error_reporting(0);
+error_reporting(0);
 include('includes/config.php');
-if(strlen($_SESSION['adminsession'])==0)
-{   
-header('location:logout.php');
-}
-else{ 
-if(isset($_POST['update']))
+ 
+if(isset($_POST['add']))
 {
-//Getting Values
-$eventid=intval($_GET['sid']);    
 // Posted Values
 $catid=$_POST['category'];
 $spnserid=$_POST['sponser'];
@@ -19,6 +13,9 @@ $ediscription=$_POST['evetndescription'];
 $esdate=$_POST['eventstartdate'];
 $eedate=$_POST['eventenddate'];
 $elocation=$_POST['eventlocation'];
+$entimage=$_FILES["eventimage"]["name"];
+$status=1;
+
 if(isset($_POST['light']) && 
    $_POST['light'] == 'yes') 
 {
@@ -48,8 +45,23 @@ else
 }	 
 
 
-// Query for updation  data into database
-$sql="UPDATE  tblevents set CategoryId=:catid,SponserId=:spnserid,EventName=:ename,EventDescription=:ediscription,EventStartDate=:esdate,EventEndDate=:eedate,EventLocation=:elocation,food=:food,light=:light,sound=:sound where id=:eid";
+// get the image extension
+$extension = substr($entimage,strlen($entimage)-4,strlen($entimage));
+// allowed extensions
+$allowed_extensions = array(".jpg","jpeg",".png",".gif");
+// Validation for allowed extensions .in_array() function searches an array for a specific value.
+if(!in_array($extension,$allowed_extensions))
+{
+echo "<script>alert('Invalid format. Only jpg / jpeg/ png /gif format allowed');</script>";
+}
+else
+{
+//rename the image file
+$eventimage=md5($entimage).$extension;
+// Code for move image into directory
+move_uploaded_file($_FILES["eventimage"]["tmp_name"],"eventimages/".$eventimage);
+// Query for insertion data into database
+$sql="INSERT INTO  tblevents(CategoryId,SponserId,EventName,EventDescription,EventStartDate,EventEndDate,EventLocation,EventImage,IsActive,food,sound,light,add_by_admin) VALUES(:catid,:spnserid,:ename,:ediscription,:esdate,:eedate,:elocation,:eventimage,:status,:food,:sound,:light,0)";
 $query = $dbh->prepare($sql);
 $query->bindParam(':catid',$catid,PDO::PARAM_STR);
 $query->bindParam(':spnserid',$spnserid,PDO::PARAM_STR);
@@ -58,17 +70,26 @@ $query->bindParam(':ediscription',$ediscription,PDO::PARAM_STR);
 $query->bindParam(':esdate',$esdate,PDO::PARAM_STR);
 $query->bindParam(':eedate',$eedate,PDO::PARAM_STR);
 $query->bindParam(':elocation',$elocation,PDO::PARAM_STR);
-$query->bindParam(':eid',$eventid,PDO::PARAM_STR);
+$query->bindParam(':eventimage',$eventimage,PDO::PARAM_STR);
+$query->bindParam(':status',$status,PDO::PARAM_STR);
 $query->bindParam(':food',$food,PDO::PARAM_INT);
 $query->bindParam(':light',$light,PDO::PARAM_INT);
 $query->bindParam(':sound',$sound,PDO::PARAM_INT);
 
 $query->execute();
-
-echo "<script>alert('Success : Event details updated successfully ');</script>";
-echo "<script>window.location.href='manage-events.php'</script>";
+$lastInsertId = $dbh->lastInsertId();
+if($lastInsertId)
+{
+echo '<script>alert("Event created successfully")</script>';
+echo "<script>window.location.href='manage-events.php</script>";  
 }
-   
+else 
+{
+echo '<script>alert("Something went wrong. Please try again")</script>';   
+}
+
+}
+}    
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -78,10 +99,10 @@ echo "<script>window.location.href='manage-events.php'</script>";
     <title>EMS | Add Event</title>
 
     <!-- Bootstrap Core CSS -->
-    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
-    <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
-    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
+    <link href="dist/css/sb-admin-2.css" rel="stylesheet">
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
  <style>
     .errorWrap {
     padding: 10px;
@@ -106,7 +127,7 @@ echo "<script>window.location.href='manage-events.php'</script>";
 <!-- Navigation -->
 <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
 <!-- / Header -->
-<?php include_once('includes/header.php');?>
+<?php include_once('includes/header1.php');?>
 <!-- / Leftbar -->
 <?php include_once('includes/leftbar.php');?>
 </nav>
@@ -114,7 +135,7 @@ echo "<script>window.location.href='manage-events.php'</script>";
         <div id="page-wrapper">
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header"> Edit Event</h1>
+                    <h1 class="page-header"> Add Event</h1>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
@@ -129,26 +150,18 @@ echo "<script>window.location.href='manage-events.php'</script>";
                             <div class="row">
                                 <div class="col-lg-12">
 
+<!-- Success / Error Message -->
+ <?php if($error){?><div class="errorWrap"><strong>ERROR</strong> : <?php echo htmlentities($error); ?> </div><?php } 
+else if($msg){?><div class="succWrap"><strong>SUCCESS</strong> : <?php echo htmlentities($msg); ?> </div><?php }?> 
 
 <form role="form" method="post" enctype="multipart/form-data">
-<?php
-$eventid=intval($_GET['sid']);
-$sql = "SELECT  tblevents.id as eid,tblevents.EventName,tblevents.EventStartDate,tblevents.EventEndDate,tblcategory.CategoryName as catname,tblcategory.id as catid,tblsponsers.sponserName as spnrname,tblsponsers.id as spnserid,tblevents.EventDescription,tblevents.EventLocation,tblevents.EventImage,tblevents.food,tblevents.light,tblevents.sound from tblevents left join tblcategory on tblcategory.id=tblevents.CategoryId left join tblsponsers on tblsponsers.id=tblevents.SponserId where tblevents.id=:eid";
-$query = $dbh -> prepare($sql);
-$query->bindParam(':eid',$eventid,PDO::PARAM_STR);
-$query->execute();
-$results=$query->fetchAll(PDO::FETCH_OBJ);
-$cnt=1;
-if($query->rowCount() > 0)
-{
-foreach($results as $result)
-{ 
-    ?>
+
+
 <!--categrory Name -->
 <div class="form-group">
 <label>Category</label>
 <select class="form-control"  name="category" autocomplete="off" required >
-<option value="<?php echo htmlentities($result->catid);?>"><?php echo htmlentities($ctname=$result->catname);?></option>
+<option disabled>Select</option>
 <?php
 $sql = "SELECT id,CategoryName,CategoryDescription,CreationDate,IsActive from tblcategory";
 $query = $dbh -> prepare($sql);
@@ -158,15 +171,9 @@ $cnt=1;
 if($query->rowCount() > 0)
 {
 foreach($results as $row)
-{ 
-if($ctname==$row->CategoryName){
-    
-continue;
-}
-else{
-?>  
+{ ?>  
 <option value="<?php echo htmlentities($row->id);?>"><?php echo htmlentities($row->CategoryName);?></option>
-<?php }} }?>
+<?php }} ?>
 </select>
 </div>
 
@@ -176,7 +183,7 @@ else{
 <label>Event Sponsors : </label>
 
 <select class="form-control"  name="sponser" autocomplete="off" required >
-<option value="<?php echo htmlentities($result->spnserid);?>"><?php echo htmlentities($spnname=$result->spnrname);?></option>
+<option disabled>Select</option>
 <?php
 $sql = "SELECT id,sponserName from tblsponsers";
 $query = $dbh -> prepare($sql);
@@ -186,26 +193,9 @@ $cnt=1;
 if($query->rowCount() > 0)
 {
 foreach($results as $row)
-{
-    if($result->food)
-        $food='checked';
-    else
-        $food='';
-    if($result->light)
-        $light = 'checked';
-    else
-        $light = '';
-    if($result->sound)
-        $sound='checked';
-    else
-        $sound = '';
-if($spnname==$row->sponserName){
-continue;
-}
-else{
-    ?>  
+{ ?>  
 <option value="<?php echo htmlentities($row->id);?>"><?php echo htmlentities($row->sponserName);?></option>
-<?php }}} ?>
+<?php }} ?>
 </select>
 
 </div>
@@ -213,39 +203,39 @@ else{
 <!--Event name -->
 <div class="form-group">
 <label>Event Name</label>
-<input class="form-control" type="text" name="eventname" autocomplete="off" value="<?php echo htmlentities($result->EventName);?>" required >
+<input class="form-control" type="text" name="eventname" autocomplete="off" required autofocus>
 </div>
 
 <!--Event Description -->
 <div class="form-group">
 <label>Event Description</label>
-<textarea class="form-control" type="text" name="evetndescription" rows="5" autocomplete="off" required ><?php echo htmlentities($result->EventDescription);?></textarea>
+<textarea class="form-control" type="text" name="evetndescription" rows="5" autocomplete="off" required autofocus></textarea>
 </div>
 
 <!--Event Start date -->
 <div class="form-group">
 <label>Event Start Date</label> 
-<input  class="form-control" type="date" name="eventstartdate" value="<?php echo htmlentities($result->EventStartDate);?>" autocomplete="off" required  />
+<input  class="form-control" type="date" name="eventstartdate" autocomplete="off" required autofocus />
 </div>
 
 <!--Event End Date -->
 <div class="form-group">
 <label>Event End Date</label>
-<input  class="form-control" type="date" name="eventenddate" autocomplete="off" value="<?php echo htmlentities($result->EventEndDate);?>" required  />
+<input  class="form-control" type="date" name="eventenddate" autocomplete="off" required autofocus />
 </div>
 
 <!--Event Location -->
 <div class="form-group">
 <label>Event location</label>
-<input  class="form-control" type="text" name="eventlocation" autocomplete="off" value="<?php echo htmlentities($result->EventLocation);?>" required  />
+<input  class="form-control" type="text" name="eventlocation" autocomplete="off" required autofocus />
 </div>
 
 <!--Event Featured Image -->
 <div class="form-group">
-<label>Event Featured Image : </label>
-<img src="eventimages/<?php echo htmlentities($result->EventImage);?>" style="border:solid #000 1px" width="300"><a href="change-event-image.php?evntid=<?php echo htmlentities($result->eid);?>"> Change Event Imgae </a>
+<label>Event Featuredstyle Image</label>
+<input  class="form-control" type="file" name="eventimage" autocomplete="off" required autofocus />
 </div>
-<?php }} ?>
+
 <div class="form-group" style="
     display: flex;
     align-items: center;
@@ -256,26 +246,24 @@ else{
     align-items: center;
     width:20px;
     margin:10px;
-" type="checkbox" name="food" <?php echo $food; ?>/>Food
+" type="checkbox" name="food" />Food
 <input  class="form-control "value="yes" type="checkbox" style="
     display: flex;
     align-items: center;
     width:20px;
     margin:10px;
-" name="sound" <?php echo $sound; ?> />Sound
+" name="sound" />Sound
 <input  class="form-control " value="yes" type="checkbox" style="
     display: flex;
     align-items: center;
     width:20px;
     margin:10px;
-" name="light" <?php echo $light; ?> />Lights
+" name="light" />Lights
 
 </div>
 
-<!--Button -->  
-<div class="form-group" align="center">                     
-<button type="submit" class="btn btn-primary" name="update">Update Event</button>
-</div>
+<!--Button -->                       
+<button type="submit" class="btn btn-default" name="add">Add Event</button>
                                     </form>
                                 </div>
 
@@ -296,10 +284,9 @@ else{
     <!-- /#wrapper -->
 
     <!-- jQuery -->
-    <script src="../vendor/jquery/jquery.min.js"></script>
-    <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../vendor/metisMenu/metisMenu.min.js"></script>
-    <script src="../dist/js/sb-admin-2.js"></script>
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="vendor/metisMenu/metisMenu.min.js"></script>
+    <script src="dist/js/sb-admin-2.js"></script>
 </body>
 </html>
-<?php } ?>

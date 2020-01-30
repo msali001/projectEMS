@@ -32,7 +32,7 @@ echo "<script>alert('Your account is Inactive. Please contact admin');</script>"
 echo "<script type='text/javascript'> document.location = 'profile.php'; </script>";
 } }
 else{
-  echo "<script>alert('Invalid Details');</script>";
+  echo "<script>alert('Invalid Username or Password');</script>";
 
 }
 

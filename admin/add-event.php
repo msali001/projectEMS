@@ -19,6 +19,36 @@ $eedate=$_POST['eventenddate'];
 $elocation=$_POST['eventlocation'];
 $entimage=$_FILES["eventimage"]["name"];
 $status=1;
+
+if(isset($_POST['light']) && 
+   $_POST['light'] == 'yes') 
+{
+    $light=1;
+}
+else
+{
+    $light=0;
+}
+if(isset($_POST['sound']) && 
+   $_POST['sound'] == 'yes') 
+{
+    $sound=1;
+}
+else
+{
+    $sound=0;
+}
+if(isset($_POST['food']) && 
+   $_POST['food'] == 'yes') 
+{
+    $food = 1;
+}
+else
+{
+    $food = 0;
+}	 
+
+
 // get the image extension
 $extension = substr($entimage,strlen($entimage)-4,strlen($entimage));
 // allowed extensions
@@ -35,7 +65,7 @@ $eventimage=md5($entimage).$extension;
 // Code for move image into directory
 move_uploaded_file($_FILES["eventimage"]["tmp_name"],"eventimages/".$eventimage);
 // Query for insertion data into database
-$sql="INSERT INTO  tblevents(CategoryId,SponserId,EventName,EventDescription,EventStartDate,EventEndDate,EventLocation,EventImage,IsActive) VALUES(:catid,:spnserid,:ename,:ediscription,:esdate,:eedate,:elocation,:eventimage,:status)";
+$sql="INSERT INTO  tblevents(CategoryId,SponserId,EventName,EventDescription,EventStartDate,EventEndDate,EventLocation,EventImage,IsActive,food,sound,light) VALUES(:catid,:spnserid,:ename,:ediscription,:esdate,:eedate,:elocation,:eventimage,:status,:food,:sound,:light)";
 $query = $dbh->prepare($sql);
 $query->bindParam(':catid',$catid,PDO::PARAM_STR);
 $query->bindParam(':spnserid',$spnserid,PDO::PARAM_STR);
@@ -46,6 +76,10 @@ $query->bindParam(':eedate',$eedate,PDO::PARAM_STR);
 $query->bindParam(':elocation',$elocation,PDO::PARAM_STR);
 $query->bindParam(':eventimage',$eventimage,PDO::PARAM_STR);
 $query->bindParam(':status',$status,PDO::PARAM_STR);
+$query->bindParam(':food',$food,PDO::PARAM_INT);
+$query->bindParam(':light',$light,PDO::PARAM_INT);
+$query->bindParam(':sound',$sound,PDO::PARAM_INT);
+
 $query->execute();
 $lastInsertId = $dbh->lastInsertId();
 if($lastInsertId)
@@ -131,7 +165,7 @@ else if($msg){?><div class="succWrap"><strong>SUCCESS</strong> : <?php echo html
 <div class="form-group">
 <label>Category</label>
 <select class="form-control"  name="category" autocomplete="off" required >
-<option>Select</option>
+<option disabled>Select</option>
 <?php
 $sql = "SELECT id,CategoryName,CategoryDescription,CreationDate,IsActive from tblcategory";
 $query = $dbh -> prepare($sql);
@@ -153,7 +187,7 @@ foreach($results as $row)
 <label>Event Sponsors : </label>
 
 <select class="form-control"  name="sponser" autocomplete="off" required >
-<option>Select</option>
+<option disabled>Select</option>
 <?php
 $sql = "SELECT id,sponserName from tblsponsers";
 $query = $dbh -> prepare($sql);
@@ -202,8 +236,34 @@ foreach($results as $row)
 
 <!--Event Featured Image -->
 <div class="form-group">
-<label>Event Featured Image</label>
+<label>Event Featuredstyle Image</label>
 <input  class="form-control" type="file" name="eventimage" autocomplete="off" required autofocus />
+</div>
+
+<div class="form-group" style="
+    display: flex;
+    align-items: center;
+">
+<label>Additional Amenities : </label>
+<input  class="form-control " value="yes" style="
+    display: flex;
+    align-items: center;
+    width:20px;
+    margin:10px;
+" type="checkbox" name="food" />Food
+<input  class="form-control "value="yes" type="checkbox" style="
+    display: flex;
+    align-items: center;
+    width:20px;
+    margin:10px;
+" name="sound" />Sound
+<input  class="form-control " value="yes" type="checkbox" style="
+    display: flex;
+    align-items: center;
+    width:20px;
+    margin:10px;
+" name="light" />Lights
+
 </div>
 
 <!--Button -->                       

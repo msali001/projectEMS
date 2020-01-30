@@ -6,7 +6,7 @@
                     <span class="icon-bar"></span>
                 </button>
 <a class="navbar-brand" href="dashboard.php">
-Event Mangement System | Admin Panel
+Event Mangement System | Add Event
 </a>
             </div>
             <!-- /.navbar-header -->
@@ -42,28 +42,8 @@ foreach($results as $row)
                         </li>
                         <li class="divider"></li>
                    
-                    <?php }} 
-
-$sql = "SELECT count(*) as count FROM `tblevents` WHERE `add_by_admin` = 0";
-$query = $dbh -> prepare($sql);
-$query->execute();
-$results=$query->fetchAll(PDO::FETCH_OBJ);
-foreach($results as $row)
-{ 
-if($row->count!=0)
-{
-
-                    ?>
-                    <li>
-                            <a href="manage-events.php">
-                                <div>
-                                    <i class="fa fa-envelope fa-fw"></i>New Event Added Nos #<?php echo htmlentities($row->count);?>
-                                    <span class="pull-right text-muted small"><?php echo htmlentities($row->BookingDate);?></span>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <?php }} ?>   
+                    <?php }} ?>
+   
                         <li>
                             <a class="text-center" href="new-bookings.php">
                                 <strong>See All Alerts</strong>
